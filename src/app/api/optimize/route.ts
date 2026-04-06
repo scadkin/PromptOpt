@@ -1,8 +1,30 @@
 import { NextRequest, NextResponse } from "next/server";
 import { optimizeLocal } from "@/lib/optimize/local";
 import { optimizeWithGemini } from "@/lib/providers/google";
+import { checkRateLimit } from "@/lib/rate-limit";
+import type { OptimizationMode } from "@/lib/types";
+
+const VALID_MODES: Set<OptimizationMode> = new Set(["local", "gemini"]);
+
+const SAFE_ERROR_FRAGMENTS = [
+  "Rate limit exceeded",
+  "Request timed out",
+  "Gemini returned an empty response",
+  "not configured",
+];
 
 export async function POST(request: NextRequest) {
+  const rateCheck = checkRateLimit();
+  if (!rateCheck.allowed) {
+    return NextResponse.json(
+      { error: "Too many requests. Please wait a moment." },
+      {
+        status: 429,
+        headers: { "Retry-After": String(Math.ceil((rateCheck.retryAfterMs || 1000) / 1000)) },
+      }
+    );
+  }
+
   try {
     const body = await request.json();
     const { prompt, mode } = body;
@@ -21,9 +43,9 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    if (mode !== "local" && mode !== "gemini") {
+    if (!VALID_MODES.has(mode)) {
       return NextResponse.json(
-        { error: "Mode must be 'local' or 'gemini'" },
+        { error: "Invalid optimization mode" },
         { status: 400 }
       );
     }
@@ -38,8 +60,14 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ optimizedPrompt });
   } catch (error: unknown) {
-    const message =
-      error instanceof Error ? error.message : "Optimization failed";
+    console.error("Optimization error:", error);
+
+    let message = "Optimization failed. Please try again.";
+    if (error instanceof Error) {
+      const isSafe = SAFE_ERROR_FRAGMENTS.some((f) => error.message.includes(f));
+      if (isSafe) message = error.message;
+    }
+
     return NextResponse.json({ error: message }, { status: 500 });
   }
 }

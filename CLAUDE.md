@@ -1,12 +1,12 @@
 # PromptOpt
 
-A prompt optimization tool that rewrites rough prompts for clarity, structure, and effectiveness, optionally tailored to a specific AI model (Claude, GPT, or Gemini).
+A prompt optimization tool that rewrites rough prompts for clarity, structure, and effectiveness. Two modes: local (rule-based, instant, free) and Gemini (AI-powered via Google's free tier).
 
 ## Stack
 
-- **Framework**: Next.js 15 (App Router) with TypeScript — full-stack React framework handling both UI and API routes in one project
-- **Styling**: Tailwind CSS 4 — utility-first CSS for rapid UI development
-- **AI SDKs**: @anthropic-ai/sdk, openai, @google/generative-ai — direct provider SDKs for calling each model's API
+- **Framework**: Next.js 15 (App Router) with TypeScript
+- **Styling**: Tailwind CSS 4
+- **AI**: @google/generative-ai (Gemini 2.5 Flash, free tier)
 - **Runtime**: Node.js 18+
 
 ## Install dependencies
@@ -21,7 +21,7 @@ npm install
 npm run dev
 ```
 
-Opens at http://localhost:3000
+Opens at http://localhost:3001
 
 ## Run tests
 
@@ -41,24 +41,28 @@ npm run lint
 
 ```
 ├── src/
-│   ├── app/                  # Next.js App Router pages and API routes
-│   │   ├── layout.tsx        # Root layout
-│   │   ├── page.tsx          # Home page (prompt input/output UI)
+│   ├── app/
+│   │   ├── layout.tsx              # Root layout
+│   │   ├── page.tsx                # Home page (prompt input/output UI)
+│   │   ├── globals.css             # Global styles
 │   │   └── api/
 │   │       └── optimize/
-│   │           └── route.ts  # POST /api/optimize — prompt optimization endpoint
+│   │           └── route.ts        # POST /api/optimize endpoint
 │   └── lib/
-│       └── providers/        # AI provider integrations
-│           ├── anthropic.ts  # Claude API wrapper
-│           ├── openai.ts     # GPT API wrapper
-│           └── google.ts     # Gemini API wrapper
-├── public/                   # Static assets
-├── .env.example              # Environment variable template
-├── CLAUDE.md                 # This file
-├── README.md                 # Project readme
+│       ├── types.ts                # Shared type definitions
+│       ├── rate-limit.ts           # In-memory rate limiter
+│       ├── optimize/
+│       │   ├── transforms.ts       # Rule-based transform pipeline
+│       │   ├── local.ts            # Local optimization orchestrator
+│       │   └── system-prompt.ts    # Gemini system prompt
+│       └── providers/
+│           └── google.ts           # Gemini API integration
+├── public/                         # Static assets
+├── .env.example                    # Environment variable template
+├── CLAUDE.md                       # This file
+├── README.md                       # Project readme
 ├── package.json
-├── tsconfig.json
-└── tailwind.config.ts
+└── tsconfig.json
 ```
 
 ## Conventions
@@ -66,4 +70,5 @@ npm run lint
 - **Naming**: camelCase for variables/functions, PascalCase for components/types, kebab-case for file names
 - **Formatting**: Follow ESLint config (eslint-config-next)
 - **API routes**: Use Next.js Route Handlers in `src/app/api/`
+- **Types**: Shared types in `src/lib/types.ts` — use `OptimizationMode` for mode strings
 - **Environment variables**: All API keys in `.env`, never committed — reference `.env.example` for structure

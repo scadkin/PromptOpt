@@ -9,15 +9,6 @@ import {
   flagConflictsAndAmbiguity,
 } from "./transforms";
 
-// Pipeline order matters:
-// 1. Normalize whitespace/quotes first
-// 2. Clean up filler words while text is still flat
-// 3. Structure into sections
-// 4. Extract constraints from structured text
-// 5. Add output format based on prompt type
-// 6. Add context placeholders
-// 7. Infer role (scans full text including headers)
-// 8. Flag conflicts/ambiguity last (analyzes the final prompt)
 const transforms = [
   trimAndNormalize,
   cleanUpLanguage,
@@ -30,16 +21,19 @@ const transforms = [
 ];
 
 export function optimizeLocal(prompt: string): string {
-  const normalized = trimAndNormalize(prompt);
-  let result = normalized;
+  let result = prompt;
 
   for (const transform of transforms) {
     result = transform(result);
   }
 
-  // If nothing changed, wrap with a Task header so the user gets something back
+  // If nothing changed and prompt is long enough, add minimal structure
+  const normalized = trimAndNormalize(prompt);
   if (result === normalized) {
-    result = `## Task\n${normalized}`;
+    if (normalized.length >= 80) {
+      result = `## Task\n${normalized}`;
+    }
+    // Short prompts: return as-is, already clean enough
   }
 
   return result;

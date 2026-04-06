@@ -92,11 +92,19 @@ export function inferRole(prompt: string): string {
   ];
   if (EXISTING_ROLE.some((p) => p.test(firstNonHeaderLine))) return prompt;
 
-  // Find the best matching role based on domain keywords in the full text
-  for (const [pattern, role] of ROLE_KEYWORD_MAP) {
-    if (pattern.test(textContent)) {
-      return `${role}\n\n${prompt}`;
+  // Score all matching roles and pick the best one
+  const matches: { role: string; score: number; index: number }[] = [];
+  for (let i = 0; i < ROLE_KEYWORD_MAP.length; i++) {
+    const [pattern, role] = ROLE_KEYWORD_MAP[i];
+    const hits = textContent.match(new RegExp(pattern, "gi"));
+    if (hits) {
+      matches.push({ role, score: hits.length, index: i });
     }
+  }
+  if (matches.length > 0) {
+    // Most keyword hits wins; on tie, prefer earlier (more specific) entries
+    matches.sort((a, b) => b.score - a.score || a.index - b.index);
+    return `${matches[0].role}\n\n${prompt}`;
   }
 
   return prompt;
@@ -155,6 +163,7 @@ const CONSTRAINT_INDICATORS = [
 ];
 
 export function extractConstraints(prompt: string): string {
+  if (prompt.length < 100) return prompt;
   if (/^##\s*constraints/im.test(prompt)) return prompt;
 
   const lines = prompt.split("\n");
@@ -261,10 +270,8 @@ const FILLER_REPLACEMENTS: [RegExp, string][] = [
   [/\bprobably\s+/gi, ""],
   [/\bkind of\s+/gi, ""],
   [/\bsort of\s+/gi, ""],
-  // Simplify indirect phrasing
-  [/\bcan you\s+/gi, ""],
-  [/\bcould you\s+/gi, ""],
-  [/\bwould you\s+/gi, ""],
+  // Note: "can you", "could you", "would you" are handled separately
+  // in convertPoliteRequests() to preserve question framing
   // Improve vague language
   [/\bgive me\b/gi, "provide"],
   [/\bfigure out\b/gi, "analyze and determine"],
@@ -272,6 +279,18 @@ const FILLER_REPLACEMENTS: [RegExp, string][] = [
 
 export function cleanUpLanguage(prompt: string): string {
   let result = prompt;
+
+  // Convert polite requests to imperatives at sentence boundaries
+  // "Can you explain React?" → "Explain React."
+  // Leaves mid-sentence usage untouched: "I wonder if you can do this"
+  result = result.replace(
+    /(^|(?<=[.!?]\s))(?:can|could|would) you\s+(.+?[.?!])/gi,
+    (_, boundary, rest) => {
+      const imperative = rest.charAt(0).toUpperCase() + rest.slice(1);
+      return boundary + imperative.replace(/\?\s*$/, ".");
+    }
+  );
+
   for (const [pattern, replacement] of FILLER_REPLACEMENTS) {
     result = result.replace(pattern, replacement);
   }
@@ -297,11 +316,11 @@ function detectIssues(prompt: string): PromptWarning[] {
   // Detect conflicting instructions
   // Patterns are intentionally broad — match the concepts, not exact phrasing
   const conflictPairs: [RegExp, RegExp, string][] = [
-    [/\b(brief|concise|short|succinct)\b/i, /\b(detailed|thorough|comprehensive|exhaustive|in.depth)\b/i, "The prompt asks to be both brief and detailed"],
+    [/\b(brief|concise|short|succinct)\b/i, /\b(detailed|thorough|comprehensive|exhaustive|in[- ]depth)\b/i, "The prompt asks to be both brief and detailed"],
     [/\b(keep it simple|simple)\b/i, /\b(detailed|thorough|comprehensive)\b/i, "The prompt asks to keep it simple but also be detailed"],
     [/\b(don'?t include|exclude|omit|skip|no) examples\b/i, /\b(include|add|provide|give) examples\b/i, "The prompt both asks for and against including examples"],
     [/\b(formal|professional)\b/i, /\b(casual|informal|conversational)\b/i, "The prompt requests both formal and casual tone"],
-    [/\b(don'?t explain|no explanat|without explain)/i, /\b(explain|walk.* through|describe why)\b/i, "The prompt asks to both explain and not explain"],
+    [/\b(don'?t explain|no explanat\w*|without explain\w*)\b/i, /\b(explain|walk.* through|describe why)\b/i, "The prompt asks to both explain and not explain"],
     [/\b(one|single|1)\b.*\b(option|answer|response|solution)\b/i, /\b(multiple|several|many|various|all)\b.*\b(options|answers|responses|solutions)\b/i, "The prompt asks for both a single and multiple responses"],
   ];
 

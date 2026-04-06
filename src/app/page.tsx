@@ -1,13 +1,13 @@
 "use client";
 
 import { useState } from "react";
-
-type Mode = "local" | "gemini";
+import ReactMarkdown from "react-markdown";
+import type { OptimizationMode } from "@/lib/types";
 
 export default function Home() {
   const [input, setInput] = useState("");
   const [output, setOutput] = useState("");
-  const [mode, setMode] = useState<Mode>("local");
+  const [mode, setMode] = useState<OptimizationMode>("local");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [copied, setCopied] = useState(false);
@@ -33,6 +33,7 @@ export default function Home() {
   }
 
   async function handleCopy() {
+    if (copied) return;
     await navigator.clipboard.writeText(output);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
@@ -80,12 +81,28 @@ export default function Home() {
         </div>
 
         {/* Input */}
-        <textarea
-          value={input}
-          onChange={(e) => setInput(e.target.value)}
-          placeholder="Paste your prompt here..."
-          className="w-full min-h-[200px] resize-y rounded-lg border border-zinc-200 bg-white p-4 font-mono text-sm leading-relaxed placeholder:text-zinc-400 focus:border-zinc-400 focus:outline-none dark:border-zinc-700 dark:bg-zinc-900 dark:placeholder:text-zinc-600 dark:focus:border-zinc-500"
-        />
+        <div>
+          <textarea
+            value={input}
+            onChange={(e) => setInput(e.target.value)}
+            maxLength={50000}
+            placeholder="Paste your prompt here..."
+            className="w-full min-h-[200px] resize-y rounded-lg border border-zinc-200 bg-white p-4 font-mono text-sm leading-relaxed placeholder:text-zinc-400 focus:border-zinc-400 focus:outline-none dark:border-zinc-700 dark:bg-zinc-900 dark:placeholder:text-zinc-600 dark:focus:border-zinc-500"
+          />
+          <div className="mt-1 flex justify-end">
+            <span
+              className={`text-xs ${
+                input.length > 45000
+                  ? "text-red-500"
+                  : input.length > 40000
+                    ? "text-amber-500"
+                    : "text-zinc-400 dark:text-zinc-500"
+              }`}
+            >
+              {input.length.toLocaleString()} / 50,000
+            </span>
+          </div>
+        </div>
 
         {/* Optimize Button */}
         <button
@@ -122,9 +139,9 @@ export default function Home() {
                 {copied ? "Copied!" : "Copy"}
               </button>
             </div>
-            <pre className="whitespace-pre-wrap p-4 font-mono text-sm leading-relaxed">
-              {output}
-            </pre>
+            <div className="prose prose-sm dark:prose-invert max-w-none p-4">
+              <ReactMarkdown>{output}</ReactMarkdown>
+            </div>
           </div>
         )}
       </div>
