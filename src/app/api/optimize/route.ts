@@ -27,7 +27,7 @@ export async function POST(request: NextRequest) {
 
   try {
     const body = await request.json();
-    const { prompt, mode } = body;
+    const { prompt, mode, customInstructions } = body;
 
     if (!prompt || typeof prompt !== "string" || prompt.trim().length === 0) {
       return NextResponse.json(
@@ -50,12 +50,16 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    const instructions = typeof customInstructions === "string"
+      ? customInstructions.trim().slice(0, 500)
+      : undefined;
+
     let optimizedPrompt: string;
 
     if (mode === "local") {
-      optimizedPrompt = optimizeLocal(prompt);
+      optimizedPrompt = optimizeLocal(prompt, instructions);
     } else {
-      optimizedPrompt = await optimizeWithGemini(prompt);
+      optimizedPrompt = await optimizeWithGemini(prompt, instructions);
     }
 
     return NextResponse.json({ optimizedPrompt });

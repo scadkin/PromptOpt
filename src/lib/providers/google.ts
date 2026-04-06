@@ -3,7 +3,7 @@ import { OPTIMIZE_SYSTEM_PROMPT } from "../optimize/system-prompt";
 
 const TIMEOUT_MS = 15_000;
 
-export async function optimizeWithGemini(prompt: string): Promise<string> {
+export async function optimizeWithGemini(prompt: string, customInstructions?: string): Promise<string> {
   const apiKey = process.env.GOOGLE_AI_API_KEY;
   if (!apiKey || apiKey === "your_key_here") {
     throw new Error(
@@ -21,7 +21,10 @@ export async function optimizeWithGemini(prompt: string): Promise<string> {
     const timeout = new Promise<never>((_, reject) =>
       setTimeout(() => reject(new Error("Request timed out. Please try again or use local mode.")), TIMEOUT_MS)
     );
-    const result = await Promise.race([model.generateContent(prompt), timeout]);
+    const userMessage = customInstructions
+      ? `${prompt}\n\n---\nAdditional optimization instructions from the user: ${customInstructions}`
+      : prompt;
+    const result = await Promise.race([model.generateContent(userMessage), timeout]);
     const text = result.response.text();
     if (!text) {
       throw new Error("Gemini returned an empty response");

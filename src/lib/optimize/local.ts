@@ -20,7 +20,7 @@ const transforms = [
   flagConflictsAndAmbiguity,
 ];
 
-export function optimizeLocal(prompt: string): string {
+export function optimizeLocal(prompt: string, customInstructions?: string): string {
   let result = prompt;
 
   for (const transform of transforms) {
@@ -33,7 +33,11 @@ export function optimizeLocal(prompt: string): string {
     if (normalized.length >= 80) {
       result = `## Task\n${normalized}`;
     }
-    // Short prompts: return as-is, already clean enough
+  }
+
+  // Append custom instructions as a note section
+  if (customInstructions) {
+    result += `\n\n## Additional Instructions\n${customInstructions}`;
   }
 
   return result;
