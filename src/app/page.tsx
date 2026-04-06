@@ -139,7 +139,7 @@ export default function Home() {
                 {copied ? "Copied!" : "Copy"}
               </button>
             </div>
-            <div className="prose prose-sm dark:prose-invert max-w-none p-4">
+            <div className="markdown-output p-4 text-sm">
               <ReactMarkdown>{output}</ReactMarkdown>
             </div>
           </div>
