@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import ReactMarkdown from "react-markdown";
 import type { OptimizationMode } from "@/lib/types";
 import {
@@ -63,8 +63,29 @@ export default function Home() {
   const [showHistory, setShowHistory] = useState(false);
   const [history, setHistory] = useState<HistoryEntry[]>([]);
   const [originalInput, setOriginalInput] = useState("");
+  const [loadingPhase, setLoadingPhase] = useState(0);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+  const phaseLabels = ["Analyzing structure...", "Rewriting for clarity...", "Polishing output..."];
 
   useEffect(() => { setHistory(getHistory()); }, []);
+
+  // Auto-grow textarea
+  useEffect(() => {
+    const el = textareaRef.current;
+    if (!el) return;
+    el.style.height = '0';
+    el.style.height = Math.min(Math.max(el.scrollHeight, 120), 400) + 'px';
+  }, [input]);
+
+  // Loading phase cycling
+  useEffect(() => {
+    if (!loading) { setLoadingPhase(0); return; }
+    const interval = setInterval(() => {
+      setLoadingPhase(p => (p + 1) % 3);
+    }, 2000);
+    return () => clearInterval(interval);
+  }, [loading]);
 
   const handleOptimize = useCallback(async () => {
     if (loading || input.trim().length === 0) return;
@@ -131,12 +152,12 @@ export default function Home() {
           {/* ===== HEADER ===== */}
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-4xl font-extrabold tracking-tight">
-                <span className="bg-gradient-to-r from-sky-400 via-cyan-300 to-orange-400 bg-clip-text text-transparent animate-gradient bg-[length:200%_auto]">
+              <h1 className="text-5xl font-extrabold tracking-tight">
+                <span className="bg-gradient-to-r from-cyan-400 via-sky-400 to-orange-400 bg-clip-text text-transparent drop-shadow-[0_0_30px_rgba(14,165,233,0.3)]">
                   PromptOpt
                 </span>
               </h1>
-              <p className="mt-1.5 text-sm font-medium" style={{ color: "var(--text-secondary)" }}>
+              <p className="mt-2 text-[11px] font-semibold uppercase tracking-[0.2em]" style={{ color: "var(--text-tertiary)" }}>
                 Transform rough ideas into powerful prompts
               </p>
             </div>
@@ -159,7 +180,7 @@ export default function Home() {
           {showHistory && (
             <div className="animate-slide-down glass rounded-2xl overflow-hidden">
               <div className="flex items-center justify-between px-5 py-3" style={{ borderBottom: "1px solid var(--border)" }}>
-                <span className="text-[11px] font-bold uppercase tracking-[0.15em] bg-gradient-to-r from-sky-400 to-orange-400 bg-clip-text text-transparent">
+                <span className="text-[11px] font-bold uppercase tracking-[0.15em] bg-gradient-to-r from-cyan-400 via-sky-400 to-orange-400 bg-clip-text text-transparent">
                   Recent Prompts
                 </span>
                 {history.length > 0 && (
@@ -195,13 +216,13 @@ export default function Home() {
           )}
 
           {/* ===== MODE TOGGLE ===== */}
-          <div className="glass flex gap-2 rounded-2xl p-2">
+          <div className="glass flex gap-1.5 rounded-2xl p-1.5">
             <button
               onClick={() => setMode("local")}
-              className={`flex-1 rounded-xl px-4 py-3.5 text-sm font-semibold transition-all duration-250 ${
+              className={`flex-1 rounded-xl px-4 py-3.5 text-sm font-semibold transition-all duration-200 ${
                 mode === "local"
-                  ? "bg-gradient-to-r from-sky-600/20 via-cyan-600/15 to-sky-600/10 text-sky-300 shadow-lg shadow-sky-500/10"
-                  : "text-[var(--text-secondary)] hover:text-[var(--foreground)] hover:bg-[var(--accent-subtle)]"
+                  ? "bg-sky-500/10 text-sky-300 border border-sky-500/15 shadow-[inset_0_0_12px_rgba(14,165,233,0.1)]"
+                  : "text-[var(--text-tertiary)] hover:text-[var(--text-secondary)] border border-transparent"
               }`}
             >
               <span className="flex items-center justify-center gap-2.5">
@@ -214,10 +235,10 @@ export default function Home() {
             </button>
             <button
               onClick={() => setMode("gemini")}
-              className={`flex-1 rounded-xl px-4 py-3.5 text-sm font-semibold transition-all duration-250 ${
+              className={`flex-1 rounded-xl px-4 py-3.5 text-sm font-semibold transition-all duration-200 ${
                 mode === "gemini"
-                  ? "bg-gradient-to-r from-orange-600/20 via-amber-600/15 to-orange-600/10 text-orange-300 shadow-lg shadow-orange-500/10"
-                  : "text-[var(--text-secondary)] hover:text-[var(--foreground)] hover:bg-[var(--accent-subtle)]"
+                  ? "bg-orange-500/10 text-orange-300 border border-orange-500/15 shadow-[inset_0_0_12px_rgba(249,115,22,0.1)]"
+                  : "text-[var(--text-tertiary)] hover:text-[var(--text-secondary)] border border-transparent"
               }`}
             >
               <span className="flex items-center justify-center gap-2.5">
@@ -235,12 +256,13 @@ export default function Home() {
             <div className="glow-border">
               <div className="rounded-[calc(1.25rem-1.5px)] bg-[var(--surface-solid)]">
                 <textarea
+                  ref={textareaRef}
                   value={input}
                   onChange={(e) => setInput(e.target.value)}
                   maxLength={50000}
                   placeholder="Type or paste your rough prompt here..."
-                  className="w-full min-h-[260px] resize-y rounded-[calc(1.25rem-1.5px)] border-0 bg-transparent p-6 font-mono text-sm leading-relaxed transition-all duration-200 placeholder:text-[var(--text-tertiary)] focus:outline-none"
-                  style={{ color: "var(--foreground)" }}
+                  className="w-full resize-none rounded-[calc(1.25rem-1.5px)] border-0 bg-transparent p-6 font-mono text-sm leading-relaxed placeholder:text-[var(--text-tertiary)] focus:outline-none"
+                  style={{ color: "var(--foreground)", minHeight: "120px" }}
                 />
               </div>
             </div>
@@ -256,6 +278,26 @@ export default function Home() {
                 {input.length.toLocaleString()} / 50,000
               </span>
             </div>
+
+            {/* Example prompt chips */}
+            {input.trim().length === 0 && !output && (
+              <div className="mt-2.5 flex flex-wrap gap-2 px-1">
+                {[
+                  "make me a website that sells shoes and looks good",
+                  "write a python script that does web scraping",
+                  "explain how machine learning works to my boss",
+                ].map((example) => (
+                  <button
+                    key={example}
+                    onClick={() => setInput(example)}
+                    className="rounded-xl border border-[var(--border)] px-3 py-1.5 text-xs transition-all duration-150 hover:border-[var(--border-hover)] hover:text-[var(--text-secondary)]"
+                    style={{ color: "var(--text-tertiary)", background: "var(--surface-solid)" }}
+                  >
+                    &ldquo;{example}&rdquo;
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
 
           {/* ===== CUSTOM INSTRUCTIONS ===== */}
@@ -266,7 +308,7 @@ export default function Home() {
                 onChange={(e) => setCustomInstructions(e.target.value)}
                 maxLength={500}
                 placeholder='e.g., "This is for a coding task in Python" or "Optimize for Claude"'
-                className="glass w-full min-h-[80px] resize-y rounded-2xl p-4 text-sm leading-relaxed transition-all duration-200 placeholder:text-[var(--text-tertiary)] focus:outline-none focus-visible:ring-2 focus-visible:ring-violet-500/30"
+                className="glass w-full min-h-[80px] resize-y rounded-2xl p-4 text-sm leading-relaxed transition-all duration-200 placeholder:text-[var(--text-tertiary)] focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-500/30"
                 style={{ color: "var(--foreground)" }}
               />
               <p className="mt-1.5 px-2 text-xs" style={{ color: "var(--text-tertiary)" }}>
@@ -279,12 +321,12 @@ export default function Home() {
           <button
             onClick={handleOptimize}
             disabled={loading || input.trim().length === 0}
-            className="btn-glow w-full rounded-2xl bg-gradient-to-r from-sky-600 via-cyan-500 to-orange-500 px-6 py-4.5 text-base font-bold text-white shadow-xl shadow-sky-500/25 transition-all duration-250 hover:shadow-2xl hover:shadow-sky-500/40 hover:scale-[1.01] active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-30 disabled:shadow-none disabled:hover:scale-100 animate-gradient bg-[length:200%_auto]"
+            className="btn-glow w-full rounded-2xl bg-gradient-to-r from-sky-600 to-cyan-500 px-6 py-4.5 text-base font-bold text-white shadow-lg shadow-sky-500/20 transition-all duration-200 hover:shadow-xl hover:shadow-sky-500/30 hover:scale-[1.01] active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-30 disabled:shadow-none disabled:hover:scale-100"
           >
             {loading ? (
               <span className="inline-flex items-center gap-3">
                 <span className="h-5 w-5 animate-spin rounded-full border-2 border-white/20 border-t-white" />
-                <span>Optimizing...</span>
+                <span>{phaseLabels[loadingPhase]}</span>
               </span>
             ) : (
               <span className="flex items-center justify-center gap-2.5">
@@ -310,7 +352,7 @@ export default function Home() {
               <div className="rounded-[calc(1.25rem-1.5px)] bg-[var(--surface-solid)]">
                 <div className="flex items-center justify-between px-6 py-3.5" style={{ borderBottom: "1px solid var(--border)" }}>
                   <div className="flex items-center gap-3">
-                    <span className="text-[11px] font-bold uppercase tracking-[0.15em] bg-gradient-to-r from-sky-400 via-cyan-300 to-orange-400 bg-clip-text text-transparent">
+                    <span className="text-[11px] font-bold uppercase tracking-[0.15em] bg-gradient-to-r from-cyan-400 via-sky-400 to-orange-400 bg-clip-text text-transparent">
                       Optimized
                     </span>
                     <button
