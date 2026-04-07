@@ -49,3 +49,5 @@ next-env.d.ts
 *.jpg
 *.jpeg
 .playwright-mcp/
+.superpowers/
+.claude/
