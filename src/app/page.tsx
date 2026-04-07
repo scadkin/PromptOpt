@@ -134,269 +134,431 @@ export default function Home() {
 
   const diffSegments = showDiff && output && originalInput ? computeWordDiff(originalInput, output) : null;
 
+  const hasInput = input.trim().length > 0;
+
   return (
     <>
-      {/* Aurora background */}
-      <div className="aurora-bg">
-        <div className="aurora-orb aurora-orb-1" />
-        <div className="aurora-orb aurora-orb-2" />
-        <div className="aurora-orb aurora-orb-3" />
-      </div>
+      {/* Grain texture */}
+      <div className="grain-overlay" />
 
-      {/* Noise texture */}
-      <div className="noise-overlay" />
+      <div className="relative z-10 min-h-[100dvh] px-4 py-8 md:py-10 flex justify-center md:justify-start">
+        <div className="w-full max-w-2xl md:ml-[8vw] lg:ml-[12vw] space-y-0">
 
-      <div className="relative z-10 flex flex-1 items-start justify-center px-4 py-14">
-        <div className="w-full max-w-2xl space-y-7">
+          {/* ===== TAPE DECK CASING (from 3010) ===== */}
+          <div className="tape-casing">
+            {/* Screw holes */}
+            <div className="screw-hole" style={{ top: 14, left: 14 }} />
+            <div className="screw-hole" style={{ top: 14, right: 14 }} />
+            <div className="screw-hole" style={{ bottom: 14, left: 14 }} />
+            <div className="screw-hole" style={{ bottom: 14, right: 14 }} />
 
-          {/* ===== HEADER ===== */}
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-5xl font-extrabold tracking-tight">
-                <span className="bg-gradient-to-r from-cyan-400 via-sky-400 to-orange-400 bg-clip-text text-transparent drop-shadow-[0_0_30px_rgba(14,165,233,0.3)]">
-                  PromptOpt
-                </span>
-              </h1>
-              <p className="mt-2 text-[11px] font-semibold uppercase tracking-[0.2em]" style={{ color: "var(--text-tertiary)" }}>
-                Transform rough ideas into powerful prompts
-              </p>
+            {/* Grip texture -- left side */}
+            <div className="grip-texture grip-texture-left">
+              {Array.from({ length: 8 }).map((_, i) => (
+                <div key={`gl-${i}`} className="grip-line" />
+              ))}
             </div>
-            <button
-              onClick={() => setShowHistory(!showHistory)}
-              className="glass rounded-2xl px-4 py-2.5 text-xs font-semibold transition-all duration-200 hover:scale-105 active:scale-95"
-              style={{ color: showHistory ? "var(--accent-text)" : "var(--text-secondary)" }}
-            >
-              <span className="flex items-center gap-2">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                  <circle cx="12" cy="12" r="10" />
-                  <polyline points="12 6 12 12 16 14" />
-                </svg>
-                {history.length > 0 ? `${history.length}` : "History"}
-              </span>
-            </button>
+
+            {/* Grip texture -- right side */}
+            <div className="grip-texture grip-texture-right">
+              {Array.from({ length: 8 }).map((_, i) => (
+                <div key={`gr-${i}`} className="grip-line" />
+              ))}
+            </div>
+
+            {/* Top trim band */}
+            <div className="trim-band trim-band-top" />
+
+            {/* ===== HEADER AREA (from 3011 typography on 3010 cream casing) ===== */}
+            <div className="px-8 pt-5 pb-3 md:px-10">
+              <div className="flex items-start justify-between">
+                <div>
+                  <h1 className="engraved-title text-3xl md:text-4xl">
+                    PROMPTOPT
+                  </h1>
+                  <p
+                    className="engraved mt-1.5"
+                    style={{ fontSize: "8px", letterSpacing: "0.2em" }}
+                  >
+                    Prompt Optimization Instrument
+                  </p>
+                </div>
+
+                {/* History counter as LCD display (from 3010) */}
+                <button
+                  onClick={() => setShowHistory(!showHistory)}
+                  className="lcd-display mt-1 transition-all duration-150 hover:brightness-110"
+                  style={{
+                    cursor: 'pointer',
+                    border: showHistory ? '1px solid rgba(90,154,90,0.3)' : '1px solid transparent',
+                  }}
+                >
+                  {history.length > 0 ? `RCL ${String(history.length).padStart(2, '0')}` : "RCL --"}
+                </button>
+              </div>
+            </div>
+
+            {/* ===== RECESSED DARK PANEL ===== */}
+            <div className="mx-4 md:mx-6 mb-4">
+              <div className="recessed-panel overflow-hidden px-5 py-4 space-y-4">
+
+                {/* Signal LEDs row (from 3012) */}
+                <div className="flex items-center gap-4">
+                  <div className="flex items-center gap-1.5">
+                    <span className={`led ${hasInput ? "led-green" : "led-off"}`} />
+                    <span className="channel-label" style={{ fontSize: "8px" }}>SIG</span>
+                  </div>
+                  <div className="flex items-center gap-1.5">
+                    <span className={`led ${loading ? "led-red" : "led-off"}`} />
+                    <span className="channel-label" style={{ fontSize: "8px" }}>PROC</span>
+                  </div>
+                  <div className="flex items-center gap-1.5">
+                    <span className={`led ${output ? "led-amber" : "led-off"}`} />
+                    <span className="channel-label" style={{ fontSize: "8px" }}>OUT</span>
+                  </div>
+                  <div className="groove flex-1" />
+                </div>
+
+                {/* CH 1: MODE SELECT (from 3012) */}
+                <div>
+                  <div className="channel-label mb-2">Ch 1: Mode Select</div>
+                  <div className="flex gap-0">
+                    <button
+                      onClick={() => setMode("local")}
+                      className={`fader-btn flex-1 rounded-l-lg ${mode === "local" ? "fader-btn-active" : "fader-btn-inactive"}`}
+                    >
+                      <span className="flex items-center justify-center gap-2">
+                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                          <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" />
+                        </svg>
+                        Local
+                        {mode === "local" && (
+                          <span className="led led-green inline-block" style={{ width: 5, height: 5 }} />
+                        )}
+                      </span>
+                    </button>
+                    <button
+                      onClick={() => setMode("gemini")}
+                      className={`fader-btn flex-1 rounded-r-lg ${mode === "gemini" ? "fader-btn-active" : "fader-btn-inactive"}`}
+                    >
+                      <span className="flex items-center justify-center gap-2">
+                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                          <path d="M12 3l1.912 5.813a2 2 0 0 0 1.275 1.275L21 12l-5.813 1.912a2 2 0 0 0-1.275 1.275L12 21l-1.912-5.813a2 2 0 0 0-1.275-1.275L3 12l5.813-1.912a2 2 0 0 0 1.275-1.275L12 3z" />
+                        </svg>
+                        Gemini
+                        {mode === "gemini" && (
+                          <span className="led led-amber inline-block" style={{ width: 5, height: 5 }} />
+                        )}
+                      </span>
+                    </button>
+                  </div>
+                </div>
+
+                <div className="groove" />
+
+                {/* CH 2: INPUT (from 3012 label style) */}
+                <div>
+                  <div className="flex items-center justify-between mb-2">
+                    <div className="channel-label">Ch 2: Input</div>
+                    <span
+                      className="font-mono text-[10px] tabular-nums font-bold"
+                      style={{
+                        color: input.length > 45000 ? '#c25a38' : input.length > 40000 ? '#d4a026' : '#5a5448',
+                      }}
+                    >
+                      {input.length.toLocaleString()} / 50,000
+                    </span>
+                  </div>
+
+                  {/* Textarea */}
+                  <textarea
+                    ref={textareaRef}
+                    value={input}
+                    onChange={(e) => setInput(e.target.value)}
+                    maxLength={50000}
+                    placeholder="Type or paste your rough prompt here..."
+                    className="tape-input rounded"
+                  />
+
+                  {/* Custom instructions toggle */}
+                  <div className="flex items-center justify-between mt-2">
+                    <button
+                      onClick={() => setShowInstructions(!showInstructions)}
+                      className="font-mono text-[10px] font-bold uppercase tracking-[0.1em] transition-colors duration-150"
+                      style={{
+                        color: showInstructions || customInstructions.trim() ? '#c25a38' : '#5a5448',
+                      }}
+                    >
+                      {customInstructions.trim() ? "* Custom instr. active" : "+ Custom instructions"}
+                    </button>
+                  </div>
+
+                  {/* Example prompt chips */}
+                  {input.trim().length === 0 && !output && (
+                    <div className="mt-2.5 flex flex-wrap gap-2">
+                      {[
+                        "make me a website that sells shoes and looks good",
+                        "write a python script that does web scraping",
+                        "explain how machine learning works to my boss",
+                      ].map((example) => (
+                        <button
+                          key={example}
+                          onClick={() => setInput(example)}
+                          className="patch-chip"
+                        >
+                          &ldquo;{example}&rdquo;
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+
+                {/* Custom instructions (inside recessed panel) */}
+                {showInstructions && (
+                  <div className="animate-slide-down">
+                    <div className="section-divider mb-2">
+                      <span className="panel-label-dark">Custom Instructions</span>
+                    </div>
+                    <textarea
+                      value={customInstructions}
+                      onChange={(e) => setCustomInstructions(e.target.value)}
+                      maxLength={500}
+                      placeholder='e.g., "This is for a coding task in Python" or "Optimize for Claude"'
+                      className="tape-input rounded"
+                      style={{
+                        minHeight: '72px',
+                        background: 'rgba(0,0,0,0.2)',
+                        borderRadius: '4px',
+                        border: '1px solid rgba(92,90,74,0.15)',
+                        padding: '12px 16px',
+                      }}
+                    />
+                    <p className="mt-1 font-mono text-[9px] uppercase tracking-[0.1em]" style={{ color: '#5a5448' }}>
+                      Additional context for the optimization.
+                    </p>
+                  </div>
+                )}
+
+                <div className="groove" />
+
+                {/* CH 3: PROCESS (from 3012) */}
+                <div>
+                  <div className="channel-label mb-2">Ch 3: Process</div>
+
+                  {/* VU meter bar -- visible during processing (from 3012) */}
+                  {loading && (
+                    <div className="vu-meter-track mb-3">
+                      <div className="vu-meter-fill" />
+                    </div>
+                  )}
+
+                  {/* THE OPTIMIZE BUTTON (from 3012 terracotta concave style) */}
+                  <button
+                    onClick={handleOptimize}
+                    disabled={loading || input.trim().length === 0}
+                    className="optimize-btn w-full"
+                  >
+                    {loading ? (
+                      <span className="inline-flex items-center gap-3">
+                        <span
+                          className="inline-block h-4 w-4 rounded-full border-2"
+                          style={{
+                            borderColor: 'rgba(240,232,220,0.2)',
+                            borderTopColor: 'rgba(240,232,220,0.8)',
+                            animation: 'spin 0.8s linear infinite',
+                          }}
+                        />
+                        <span>{phaseLabels[loadingPhase]}</span>
+                      </span>
+                    ) : (
+                      <span className="flex items-center justify-center gap-3">
+                        Optimize
+                        <span
+                          className="font-mono text-[10px] font-medium tracking-normal"
+                          style={{ color: 'rgba(240,232,220,0.35)' }}
+                        >
+                          Cmd+Enter
+                        </span>
+                      </span>
+                    )}
+                  </button>
+                </div>
+
+                {/* ===== ERROR ===== */}
+                {error && (
+                  <div className="animate-fade-in">
+                    <div
+                      className="rounded px-4 py-2.5 font-mono text-xs font-bold"
+                      style={{
+                        background: 'rgba(168, 74, 44, 0.1)',
+                        border: '1px solid rgba(168, 74, 44, 0.3)',
+                        color: '#c25a38',
+                      }}
+                    >
+                      ERR: {error}
+                    </div>
+                  </div>
+                )}
+
+                {/* Groove before output */}
+                {output && <div className="groove" />}
+
+                {/* ===== CH 4: OUTPUT (from 3012 style) ===== */}
+                {output && (
+                  <div className="animate-fade-in">
+                    <div className="flex items-center justify-between mb-2">
+                      <div className="channel-label flex items-center gap-2">
+                        Ch 4: Output
+                        <span className="led led-amber" />
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <button
+                          onClick={() => setShowDiff(!showDiff)}
+                          className="font-mono text-[10px] font-bold uppercase tracking-[0.08em] rounded px-2.5 py-1 transition-all duration-150"
+                          style={{
+                            color: showDiff ? '#c25a38' : '#5a5448',
+                            background: showDiff ? 'rgba(168,74,44,0.1)' : 'transparent',
+                            border: showDiff ? '1px solid rgba(168,74,44,0.2)' : '1px solid transparent',
+                          }}
+                        >
+                          Diff
+                        </button>
+                        <button
+                          onClick={handleCopy}
+                          className="font-mono text-[10px] font-bold uppercase tracking-[0.08em] rounded px-2.5 py-1 transition-all duration-150"
+                          style={{
+                            color: copied ? '#5a9a5a' : '#5a5448',
+                            background: copied ? 'rgba(90,154,90,0.1)' : 'transparent',
+                          }}
+                        >
+                          {copied ? (
+                            <span className="flex items-center gap-1.5">
+                              <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12" /></svg>
+                              Copied
+                            </span>
+                          ) : "Copy"}
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Output content area */}
+                    <div
+                      className="rounded overflow-hidden"
+                      style={{
+                        background: 'rgba(0,0,0,0.12)',
+                        boxShadow: 'inset 0 2px 4px rgba(0,0,0,0.2)',
+                      }}
+                    >
+                      {showDiff && diffSegments ? (
+                        <div className="p-5 font-mono text-[13px] leading-relaxed whitespace-pre-wrap" style={{ color: '#3a3630' }}>
+                          {diffSegments.map((seg, idx) => {
+                            if (seg.type === "removed") return <span key={idx} style={{ background: 'rgba(168,74,44,0.15)', color: '#c25a38', textDecoration: 'line-through', textDecorationColor: 'rgba(194,90,56,0.4)' }}>{seg.text}</span>;
+                            if (seg.type === "added") return <span key={idx} style={{ background: 'rgba(90,154,90,0.15)', color: '#5a9a5a' }}>{seg.text}</span>;
+                            return <span key={idx}>{seg.text}</span>;
+                          })}
+                        </div>
+                      ) : (
+                        <div className="markdown-output p-5 text-sm">
+                          <ReactMarkdown>{output}</ReactMarkdown>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
+
+              </div>
+            </div>
+
+            {/* ===== FOOTER (from 3011 model plate typography) ===== */}
+            <div className="px-8 md:px-10 pb-2 pt-1">
+              <div className="groove-on-cream mb-2" />
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <div className="led-pwr" />
+                  <span className="model-plate" style={{ fontSize: '7px', letterSpacing: '0.12em' }}>Pwr</span>
+                </div>
+                <p className="model-plate">
+                  PromptOpt PO-1.0 | Serial: 001 | Cal: 2026
+                </p>
+              </div>
+            </div>
+
+            {/* Bottom trim band */}
+            <div className="trim-band trim-band-bottom" />
           </div>
 
-          {/* ===== HISTORY ===== */}
+          {/* Device feet (from 3010) */}
+          <div className="device-feet">
+            <div className="device-foot" />
+            <div className="device-foot" />
+            <div className="device-foot" />
+            <div className="device-foot" />
+          </div>
+
+          {/* ===== HISTORY (below the casing, from 3010 layout) ===== */}
           {showHistory && (
-            <div className="animate-slide-down glass rounded-2xl overflow-hidden">
-              <div className="flex items-center justify-between px-5 py-3" style={{ borderBottom: "1px solid var(--border)" }}>
-                <span className="text-[11px] font-bold uppercase tracking-[0.15em] bg-gradient-to-r from-cyan-400 via-sky-400 to-orange-400 bg-clip-text text-transparent">
-                  Recent Prompts
-                </span>
+            <div className="animate-slide-down tape-casing overflow-hidden mt-4">
+              <div className="trim-band trim-band-top" />
+              <div
+                className="flex items-center justify-between px-6 py-3"
+                style={{ borderBottom: '1px solid rgba(92,90,74,0.2)' }}
+              >
+                <span className="engraved" style={{ color: '#5c5a4a' }}>Recent Prompts</span>
                 {history.length > 0 && (
-                  <button onClick={handleClearHistory} className="text-xs font-medium transition-colors duration-150 text-[var(--text-tertiary)] hover:text-rose-400">
-                    Clear all
+                  <button
+                    onClick={handleClearHistory}
+                    className="font-mono text-[9px] font-bold uppercase tracking-[0.1em] transition-colors duration-150"
+                    style={{ color: '#8a8274' }}
+                    onMouseEnter={(e) => { e.currentTarget.style.color = '#c25a38'; }}
+                    onMouseLeave={(e) => { e.currentTarget.style.color = '#8a8274'; }}
+                  >
+                    Clear All
                   </button>
                 )}
               </div>
               {history.length === 0 ? (
-                <p className="p-5 text-sm" style={{ color: "var(--text-tertiary)" }}>No history yet.</p>
+                <p className="p-5 font-mono text-xs" style={{ color: '#8a8274' }}>No history yet.</p>
               ) : (
                 <div className="max-h-64 overflow-y-auto">
                   {history.map((entry) => (
-                    <div key={entry.id} className="group flex items-center gap-3 px-5 py-3 transition-all duration-150 hover:bg-[var(--accent-subtle)]" style={{ borderBottom: "1px solid var(--border)" }}>
+                    <div
+                      key={entry.id}
+                      className="group flex items-center gap-3 px-6 py-3 transition-all duration-150"
+                      style={{ borderBottom: '1px solid rgba(92,90,74,0.15)' }}
+                      onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(200,191,174,0.3)'; }}
+                      onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; }}
+                    >
                       <button onClick={() => loadFromHistory(entry)} className="flex-1 text-left">
-                        <p className="truncate text-sm font-medium" style={{ color: "var(--foreground)" }}>{entry.input}</p>
-                        <p className="mt-0.5 text-xs" style={{ color: "var(--text-tertiary)" }}>
+                        <p className="truncate text-sm font-medium" style={{ color: '#2a2620' }}>{entry.input}</p>
+                        <p className="mt-0.5 text-[10px] font-mono" style={{ color: '#8a8274' }}>
                           <span className="inline-flex items-center gap-1.5">
-                            <span className="inline-block h-2 w-2 rounded-full" style={{ background: entry.mode === "local" ? "linear-gradient(135deg, #0ea5e9, #06b6d4)" : "linear-gradient(135deg, #f97316, #ef4444)" }} />
+                            <span
+                              className="inline-block h-2 w-2 rounded-full"
+                              style={{
+                                background: entry.mode === "local" ? '#5c5a4a' : '#a84a2c',
+                              }}
+                            />
                             {entry.mode}
                           </span>
-                          {" · "}{new Date(entry.timestamp).toLocaleDateString(undefined, { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" })}
+                          {" / "}
+                          {new Date(entry.timestamp).toLocaleDateString(undefined, { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" })}
                         </p>
                       </button>
-                      <button onClick={() => handleDeleteHistory(entry.id)} className="shrink-0 rounded-xl p-2 text-[var(--text-tertiary)] opacity-0 transition-all duration-150 hover:bg-rose-500/10 hover:text-rose-400 group-hover:opacity-100" title="Delete">
+                      <button
+                        onClick={() => handleDeleteHistory(entry.id)}
+                        className="shrink-0 rounded p-1.5 opacity-0 transition-all duration-150 group-hover:opacity-100"
+                        style={{ color: '#8a8274' }}
+                        onMouseEnter={(e) => { e.currentTarget.style.color = '#c25a38'; }}
+                        onMouseLeave={(e) => { e.currentTarget.style.color = '#8a8274'; }}
+                        title="Delete"
+                      >
                         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" /></svg>
                       </button>
                     </div>
                   ))}
                 </div>
               )}
-            </div>
-          )}
-
-          {/* ===== MODE TOGGLE ===== */}
-          <div className="glass flex gap-1.5 rounded-2xl p-1.5">
-            <button
-              onClick={() => setMode("local")}
-              className={`flex-1 rounded-xl px-4 py-3.5 text-sm font-semibold transition-all duration-200 ${
-                mode === "local"
-                  ? "bg-sky-500/10 text-sky-300 border border-sky-500/15 shadow-[inset_0_0_12px_rgba(14,165,233,0.1)]"
-                  : "text-[var(--text-tertiary)] hover:text-[var(--text-secondary)] border border-transparent"
-              }`}
-            >
-              <span className="flex items-center justify-center gap-2.5">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" />
-                </svg>
-                Local
-                <span className="text-[10px] font-bold rounded-full px-2 py-0.5 bg-sky-500/10 text-sky-400/70">FAST</span>
-              </span>
-            </button>
-            <button
-              onClick={() => setMode("gemini")}
-              className={`flex-1 rounded-xl px-4 py-3.5 text-sm font-semibold transition-all duration-200 ${
-                mode === "gemini"
-                  ? "bg-orange-500/10 text-orange-300 border border-orange-500/15 shadow-[inset_0_0_12px_rgba(249,115,22,0.1)]"
-                  : "text-[var(--text-tertiary)] hover:text-[var(--text-secondary)] border border-transparent"
-              }`}
-            >
-              <span className="flex items-center justify-center gap-2.5">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M12 3l1.912 5.813a2 2 0 0 0 1.275 1.275L21 12l-5.813 1.912a2 2 0 0 0-1.275 1.275L12 21l-1.912-5.813a2 2 0 0 0-1.275-1.275L3 12l5.813-1.912a2 2 0 0 0 1.275-1.275L12 3z" />
-                </svg>
-                Gemini
-                <span className="text-[10px] font-bold rounded-full px-2 py-0.5 bg-orange-500/10 text-orange-400/70">AI</span>
-              </span>
-            </button>
-          </div>
-
-          {/* ===== INPUT ===== */}
-          <div>
-            <div className="glow-border">
-              <div className="rounded-[calc(1.25rem-1.5px)] bg-[var(--surface-solid)]">
-                <textarea
-                  ref={textareaRef}
-                  value={input}
-                  onChange={(e) => setInput(e.target.value)}
-                  maxLength={50000}
-                  placeholder="Type or paste your rough prompt here..."
-                  className="w-full resize-none rounded-[calc(1.25rem-1.5px)] border-0 bg-transparent p-6 font-mono text-sm leading-relaxed placeholder:text-[var(--text-tertiary)] focus:outline-none"
-                  style={{ color: "var(--foreground)", minHeight: "120px" }}
-                />
-              </div>
-            </div>
-            <div className="mt-2.5 flex items-center justify-between px-2">
-              <button
-                onClick={() => setShowInstructions(!showInstructions)}
-                className="text-xs font-medium transition-all duration-150 hover:scale-105"
-                style={{ color: showInstructions || customInstructions.trim() ? "var(--accent-text)" : "var(--text-tertiary)" }}
-              >
-                {customInstructions.trim() ? "✦ Custom instructions active" : "+ Custom instructions"}
-              </button>
-              <span className="text-xs tabular-nums font-medium" style={{ color: input.length > 45000 ? "#f43f5e" : input.length > 40000 ? "#f59e0b" : "var(--text-tertiary)" }}>
-                {input.length.toLocaleString()} / 50,000
-              </span>
-            </div>
-
-            {/* Example prompt chips */}
-            {input.trim().length === 0 && !output && (
-              <div className="mt-2.5 flex flex-wrap gap-2 px-1">
-                {[
-                  "make me a website that sells shoes and looks good",
-                  "write a python script that does web scraping",
-                  "explain how machine learning works to my boss",
-                ].map((example) => (
-                  <button
-                    key={example}
-                    onClick={() => setInput(example)}
-                    className="rounded-xl border border-[var(--border)] px-3 py-1.5 text-xs transition-all duration-150 hover:border-[var(--border-hover)] hover:text-[var(--text-secondary)]"
-                    style={{ color: "var(--text-tertiary)", background: "var(--surface-solid)" }}
-                  >
-                    &ldquo;{example}&rdquo;
-                  </button>
-                ))}
-              </div>
-            )}
-          </div>
-
-          {/* ===== CUSTOM INSTRUCTIONS ===== */}
-          {showInstructions && (
-            <div className="animate-slide-down">
-              <textarea
-                value={customInstructions}
-                onChange={(e) => setCustomInstructions(e.target.value)}
-                maxLength={500}
-                placeholder='e.g., "This is for a coding task in Python" or "Optimize for Claude"'
-                className="glass w-full min-h-[80px] resize-y rounded-2xl p-4 text-sm leading-relaxed transition-all duration-200 placeholder:text-[var(--text-tertiary)] focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-500/30"
-                style={{ color: "var(--foreground)" }}
-              />
-              <p className="mt-1.5 px-2 text-xs" style={{ color: "var(--text-tertiary)" }}>
-                Additional context for the optimization.
-              </p>
-            </div>
-          )}
-
-          {/* ===== OPTIMIZE BUTTON ===== */}
-          <button
-            onClick={handleOptimize}
-            disabled={loading || input.trim().length === 0}
-            className="btn-glow w-full rounded-2xl bg-gradient-to-r from-sky-600 to-cyan-500 px-6 py-4.5 text-base font-bold text-white shadow-lg shadow-sky-500/20 transition-all duration-200 hover:shadow-xl hover:shadow-sky-500/30 hover:scale-[1.01] active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-30 disabled:shadow-none disabled:hover:scale-100"
-          >
-            {loading ? (
-              <span className="inline-flex items-center gap-3">
-                <span className="h-5 w-5 animate-spin rounded-full border-2 border-white/20 border-t-white" />
-                <span>{phaseLabels[loadingPhase]}</span>
-              </span>
-            ) : (
-              <span className="flex items-center justify-center gap-2.5">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M12 3l1.912 5.813a2 2 0 0 0 1.275 1.275L21 12l-5.813 1.912a2 2 0 0 0-1.275 1.275L12 21l-1.912-5.813a2 2 0 0 0-1.275-1.275L3 12l5.813-1.912a2 2 0 0 0 1.275-1.275L12 3z" />
-                </svg>
-                Optimize
-                <span className="text-sm text-white/30 font-medium">⌘↵</span>
-              </span>
-            )}
-          </button>
-
-          {/* ===== ERROR ===== */}
-          {error && (
-            <div className="animate-fade-in glass rounded-2xl border-rose-500/20 px-5 py-3">
-              <p className="text-sm font-medium text-rose-400">{error}</p>
-            </div>
-          )}
-
-          {/* ===== OUTPUT ===== */}
-          {output && (
-            <div className="animate-fade-in glow-border">
-              <div className="rounded-[calc(1.25rem-1.5px)] bg-[var(--surface-solid)]">
-                <div className="flex items-center justify-between px-6 py-3.5" style={{ borderBottom: "1px solid var(--border)" }}>
-                  <div className="flex items-center gap-3">
-                    <span className="text-[11px] font-bold uppercase tracking-[0.15em] bg-gradient-to-r from-cyan-400 via-sky-400 to-orange-400 bg-clip-text text-transparent">
-                      Optimized
-                    </span>
-                    <button
-                      onClick={() => setShowDiff(!showDiff)}
-                      className={`rounded-xl px-3 py-1 text-xs font-semibold transition-all duration-150 ${
-                        showDiff
-                          ? "bg-gradient-to-r from-sky-500/15 to-cyan-500/15 text-sky-300"
-                          : "text-[var(--text-tertiary)] hover:text-[var(--accent-text)] hover:bg-[var(--accent-subtle)]"
-                      }`}
-                    >
-                      Diff
-                    </button>
-                  </div>
-                  <button
-                    onClick={handleCopy}
-                    className={`rounded-xl px-3.5 py-1.5 text-xs font-semibold transition-all duration-200 hover:scale-105 active:scale-95 ${
-                      copied
-                        ? "bg-emerald-500/15 text-emerald-400"
-                        : "text-[var(--text-tertiary)] hover:text-[var(--accent-text)] hover:bg-[var(--accent-subtle)]"
-                    }`}
-                  >
-                    {copied ? (
-                      <span className="flex items-center gap-1.5">
-                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12" /></svg>
-                        Copied!
-                      </span>
-                    ) : "Copy"}
-                  </button>
-                </div>
-
-                {showDiff && diffSegments ? (
-                  <div className="p-6 font-mono text-sm leading-relaxed whitespace-pre-wrap">
-                    {diffSegments.map((seg, idx) => {
-                      if (seg.type === "removed") return <span key={idx} className="rounded bg-rose-500/10 text-rose-400 line-through decoration-rose-400/50">{seg.text}</span>;
-                      if (seg.type === "added") return <span key={idx} className="rounded bg-emerald-500/10 text-emerald-400">{seg.text}</span>;
-                      return <span key={idx}>{seg.text}</span>;
-                    })}
-                  </div>
-                ) : (
-                  <div className="markdown-output p-6 text-sm">
-                    <ReactMarkdown>{output}</ReactMarkdown>
-                  </div>
-                )}
-              </div>
+              <div className="trim-band trim-band-bottom" />
             </div>
           )}
         </div>
